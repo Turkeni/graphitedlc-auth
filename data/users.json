@@ -1,0 +1,23 @@
+[
+  {
+    "id": "mtysd7qj01kk5z",
+    "login": "turkeni",
+    "passwordHash": "$2a$10$n57iTROD8qrAUWajmKOH0O5S0VSYqD5j91e0nyl8seahwsTSWsemG",
+    "createdAt": "2026-09-12T19:36:33.643Z",
+    "group": "Создатель"
+  },
+  {
+    "id": "mtysqmi2ao7dev",
+    "login": "turkeni12",
+    "passwordHash": "$2a$10$61VScOP8nELjQmbRQSLyEe6blU3XVDhPTTDyL0lKkq.RFPjcZ6sU.",
+    "group": "Игрок",
+    "createdAt": "2026-09-12T19:46:59.306Z"
+  },
+  {
+    "id": "mtystaoz62rb2s",
+    "login": "chort",
+    "passwordHash": "$2a$10$Ddgt0tbnEwE45QDu3nFR5.UgyWO7ez1ZaNwDWHgcY0hgwQhLtAjdG",
+    "group": "Игрок",
+    "createdAt": "2026-09-12T19:49:03.971Z"
+  }
+]
