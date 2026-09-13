@@ -1,6 +1,12 @@
 /**
  * GraphiteDLC Auth Server — регистрация / вход + группы
- * Группы: Игрок (по умолчанию), Создатель (через CREATOR_LOGINS или вручную в users.json)
+ * Группы: Игрок | Бета тестер | Стажер | Создатель
+ *
+ * Env:
+ *   JWT_SECRET
+ *   CREATOR_LOGINS=turkeni
+ *   STAZHER_LOGINS=user1,user2
+ *   BETA_LOGINS=user3,user4
  */
 
 const express = require('express');
@@ -12,10 +18,17 @@ const jwt = require('jsonwebtoken');
 
 const PORT = Number(process.env.PORT) || 8787;
 const JWT_SECRET = process.env.JWT_SECRET || 'CHANGE_ME_GRAPHITEDLC_SECRET_KEY_2026';
-const CREATOR_LOGINS = String(process.env.CREATOR_LOGINS || '')
-  .split(',')
-  .map(s => s.trim().toLowerCase())
-  .filter(Boolean);
+
+function parseList(envVal) {
+  return String(envVal || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+const CREATOR_LOGINS = parseList(process.env.CREATOR_LOGINS);
+const STAZHER_LOGINS = parseList(process.env.STAZHER_LOGINS);
+const BETA_LOGINS = parseList(process.env.BETA_LOGINS);
 
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -43,10 +56,21 @@ function isValidPassword(password) {
   return typeof password === 'string' && password.length >= 6 && password.length <= 64;
 }
 
+/** Приоритет: Создатель > Стажер > Бета тестер > сохранённая группа > Игрок */
 function resolveGroup(login, existingGroup) {
-  if (CREATOR_LOGINS.includes(String(login).toLowerCase())) return 'Создатель';
-  if (existingGroup === 'Создатель') return 'Создатель';
-  return existingGroup || 'Игрок';
+  const key = String(login).toLowerCase();
+  if (CREATOR_LOGINS.includes(key)) return 'Создатель';
+  if (STAZHER_LOGINS.includes(key)) return 'Стажер';
+  if (BETA_LOGINS.includes(key)) return 'Бета тестер';
+  if (
+    existingGroup === 'Создатель' ||
+    existingGroup === 'Стажер' ||
+    existingGroup === 'Бета тестер' ||
+    existingGroup === 'Игрок'
+  ) {
+    return existingGroup;
+  }
+  return 'Игрок';
 }
 
 function publicUser(u) {
@@ -63,12 +87,10 @@ app.use(cors());
 app.use(express.json({ limit: '32kb' }));
 
 app.get('/', (_req, res) => {
-  res.json({ ok: true, service: 'GraphiteDLC Auth', version: '1.1.0' });
+  res.json({ ok: true, service: 'GraphiteDLC Auth', version: '1.3.0' });
 });
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true });
-});
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.post('/api/register', async (req, res) => {
   try {
@@ -127,7 +149,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
 
-    // обновить группу, если логин в CREATOR_LOGINS
     const group = resolveGroup(user.login, user.group);
     if (user.group !== group) {
       user.group = group;
@@ -161,9 +182,7 @@ app.get('/api/me', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`GraphiteDLC Auth listening on http://localhost:${PORT}`);
-  if (CREATOR_LOGINS.length) {
-    console.log('Creator logins:', CREATOR_LOGINS.join(', '));
-  } else {
-    console.log('Creator logins: (none via env) — set group manually in data/users.json or use CREATOR_LOGINS');
-  }
+  console.log('Creators:', CREATOR_LOGINS.join(', ') || '(none)');
+  console.log('Stazhery:', STAZHER_LOGINS.join(', ') || '(none)');
+  console.log('Beta:', BETA_LOGINS.join(', ') || '(none)');
 });
