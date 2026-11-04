@@ -2,7 +2,8 @@
  * GraphiteDLC Auth Server
  * Роли + аватары на сервере
  *
- * Env: JWT_SECRET, CREATOR_LOGINS, STAZHER_LOGINS, BETA_LOGINS
+ * Env: JWT_SECRET, CREATOR_LOGINS, STAZHER_LOGINS, BETA_LOGINS,
+ *      TIKTOK_LOGINS, YOUTUBE_LOGINS
  *      PUBLIC_URL — публичный URL сервера (для абсолютных ссылок на аватар)
  *      DONATEPAY_API_KEY — секретный ключ DonatePay, только на Railway
  *      DONATEPAY_URL — ссылка на вашу страницу оплаты DonatePay
@@ -34,6 +35,8 @@ function parseList(envVal) {
 const CREATOR_LOGINS = parseList(process.env.CREATOR_LOGINS);
 const STAZHER_LOGINS = parseList(process.env.STAZHER_LOGINS);
 const BETA_LOGINS = parseList(process.env.BETA_LOGINS);
+const TIKTOK_LOGINS = parseList(process.env.TIKTOK_LOGINS);
+const YOUTUBE_LOGINS = parseList(process.env.YOUTUBE_LOGINS);
 
 const DATA_DIR = path.join(__dirname, 'data');
 const AVATAR_DIR = path.join(DATA_DIR, 'avatars');
@@ -171,10 +174,13 @@ function isValidPassword(password) {
 
 function resolveGroup(login, existingGroup) {
   const key = String(login).toLowerCase();
+  // Приоритет: Создатель > Стажер > Бета тестер > TikTok > YouTube > сохранённая > Игрок
   if (CREATOR_LOGINS.includes(key)) return 'Создатель';
   if (STAZHER_LOGINS.includes(key)) return 'Стажер';
   if (BETA_LOGINS.includes(key)) return 'Бета тестер';
-  if (['Создатель', 'Стажер', 'Бета тестер', 'Игрок'].includes(existingGroup)) {
+  if (TIKTOK_LOGINS.includes(key)) return 'TikTok';
+  if (YOUTUBE_LOGINS.includes(key)) return 'YouTube';
+  if (['Создатель', 'Стажер', 'Бета тестер', 'TikTok', 'YouTube', 'Игрок'].includes(existingGroup)) {
     return existingGroup;
   }
   return 'Игрок';
@@ -409,5 +415,7 @@ app.listen(PORT, () => {
   console.log('Creators:', CREATOR_LOGINS.join(', ') || '(none)');
   console.log('Stazhery:', STAZHER_LOGINS.join(', ') || '(none)');
   console.log('Beta:', BETA_LOGINS.join(', ') || '(none)');
+  console.log('TikTok:', TIKTOK_LOGINS.join(', ') || '(none)');
+  console.log('YouTube:', YOUTUBE_LOGINS.join(', ') || '(none)');
   console.log('DonatePay:', DONATEPAY_API_KEY ? 'API key set' : 'API key NOT set', DONATEPAY_URL ? 'payment URL set' : 'payment URL NOT set');
 });
